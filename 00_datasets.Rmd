@@ -1,0 +1,665 @@
+---
+title: "Untitled"
+author: "Induni  Pitiyage"
+date: "2023-05-26"
+output: html_document
+---
+
+
+```{r}
+r<- read.csv("C:/Users/1999i/Downloads/restaurants (2).csv.gz", sep=";")
+head(r)
+library(tidyr)
+dd =extract(r, data, into = c("Year", "Month","Day"), "(.{4})(.{2})(.{2})", remove=FALSE)
+
+dd$date <- as.Date(with(dd, paste(Year, Month, Day,sep="-")), "%Y-%m-%d")
+dd$ristorante <- as.factor(dd$ristorante)
+head(dd)
+dd$weekday <- weekdays(dd$date) 
+
+
+data = dd %>% select(date,ristorante,lordototale,weekday)
+head(data)
+```
+
+
+```{r}
+data= data %>% mutate( LOCALITA = ifelse(ristorante == "R000", "Pavia",
+                                     ifelse(ristorante == "R001", "Piacenza",
+                                            ifelse(ristorante == "R002", "Piacenza",
+                                                   ifelse(ristorante == "R003", "Piacenza", 
+                                                          ifelse(ristorante == "R004","Pavia","Pavia"))))))
+data$LOCALITA = as.factor(data$LOCALITA)
+data
+```
+
+
+```{r}
+#R000
+r0 = data %>% filter(ristorante == "R000")
+
+pavia_weather <- read.csv("~/datasclab/pavia_weather.csv")
+pavia_weather = pavia_weather %>% rename(date = "DATA")
+R000 = merge(r0,pavia_weather,by = "date")
+
+```
+
+
+```{r}
+#R005
+r5= data %>% filter(ristorante == "R005")
+
+pavia_weather <- read.csv("~/datasclab/pavia_weather.csv")
+pavia_weather = pavia_weather %>% rename(date = "DATA")
+R005 = merge(r5,pavia_weather,by = "date")
+
+```
+
+
+```{r}
+#R004
+r4 = data %>% filter(ristorante == "R004")
+
+pavia_weather <- read.csv("~/datasclab/pavia_weather.csv")
+pavia_weather = pavia_weather %>% rename(date = "DATA")
+R004 = merge(r4,pavia_weather,by = "date")
+
+```
+
+
+```{r}
+#R003
+r3 = data %>% filter(ristorante == "R003")
+
+ piacenza_weather <- read.csv("~/datasclab/piacenza_weather.csv")
+ piacenza_weather =  piacenza_weather %>% rename(date = "DATA")
+R003 = merge(r3, piacenza_weather,by = "date")
+
+```
+
+
+```{r}
+#R002
+r2 = data %>% filter(ristorante == "R002")
+
+ piacenza_weather <- read.csv("~/datasclab/piacenza_weather.csv")
+ piacenza_weather =  piacenza_weather %>% rename(date = "DATA")
+R002 = merge(r2, piacenza_weather,by = "date")
+
+```
+
+
+```{r}
+#R001
+r1 = data %>% filter(ristorante == "R001")
+
+ piacenza_weather <- read.csv("~/datasclab/piacenza_weather.csv")
+ piacenza_weather =  piacenza_weather %>% rename(date = "DATA")
+R001 = merge(r1, piacenza_weather,by = "date")
+
+```
+
+```{r}
+DATA <- do.call("rbind", list(R000,R001,R002,R003,R004,R005))
+DATA <- DATA[order(DATA$date),]
+#write.csv(DATA, file = '~/datasclab/weather_restu.csv', sep = ',', row.names=FALSE, col.names=TRUE)
+```
+
+################################ covid dataset
+
+
+```{r warning=FALSE}
+library(readr)
+a <- read_csv("~/datasclab/andamentoProvince.csv")
+head(a)
+
+a1 =extract(a, data, into = c("date", "time"), "(.{10})(.{8})", remove=FALSE)
+
+a2 =a1 %>% select(date,sigla_provincia,totale_casi) %>% filter(sigla_provincia == "PV"|sigla_provincia=="PC")
+a2$date = as.Date(a2$date)
+a2$sigla_provincia = as.factor(a2$sigla_provincia)
+head(a2)
+```
+
+
+```{r}
+PV = a2 %>% filter(sigla_provincia == "PV")
+
+p0 = merge(R000,PV)
+p4 = merge(R004,PV)
+p5 = merge(R005,PV)
+
+
+PC = a2 %>% filter(sigla_provincia == "PC")
+
+p1 = merge(R001,PC)
+p2 = merge(R002,PC)
+p3 = merge(R003,PC)
+
+```
+
+
+```{r}
+
+covid <- do.call("rbind", list(r000,r001,r002,r003,r004,r005))
+covid <- covid[order(covid$date),]
+#write.csv(covid, file = '~/datasclab/covid.csv', sep = ',', row.names=FALSE, col.names=TRUE)
+
+```
+
+
+################ Population dataset
+
+```{r}
+
+weather_restu <-read.csv("~/datasclab/weather_restu.csv")
+head(weather_restu)
+
+library(lubridate)
+w =weather_restu  %>%
+  dplyr::mutate(year = lubridate::year(weather_restu$date), 
+                month = lubridate::month(weather_restu$date), 
+                day = lubridate::day(weather_restu$date))
+head(w)
+
+```
+
+
+
+```{r}
+w = w %>% mutate( place = ifelse(ristorante == "R000", "Montebello",
+                                     ifelse(ristorante == "R001", "Piacenza",
+                                            ifelse(ristorante == "R002", "Piacenza",
+                                                   ifelse(ristorante == "R003", "Piacenza", 
+                                                          ifelse(ristorante == "R004","Stradella","Voghera"))))))
+ w$place = as.factor(w$place)
+head(w) 
+```
+
+
+```{r}
+# 2023
+
+y2023 =  w %>% filter(year == "2023")
+
+y2023  = y2023  %>% mutate( population = ifelse(place ==  "Montebello", 1440,
+                                     ifelse(place == "Piacenza", 283650,
+                                          ifelse(place =="Voghera", 38637, 11425))))
+
+y2023$population = as.integer(y2023$population)
+
+```
+
+
+
+```{r}
+# 2022
+
+y2022 =  w %>% filter(year == "2022")
+
+y2022  = y2022  %>% mutate( population = ifelse(place ==  "Montebello", 1467,
+                                     ifelse(place == "Piacenza", 283435,
+                                          ifelse(place =="Voghera", 38316, 11406))))
+
+y2022$population = as.integer(y2022$population)
+
+head(y2022)
+```
+
+
+```{r}
+# 2021
+
+y2021 =  w %>% filter(year == "2021")
+
+y2021  = y2021  %>% mutate( population = ifelse(place ==  "Montebello", 1512,
+                                     ifelse(place == "Piacenza", 283742,
+                                          ifelse(place =="Voghera", 38435, 11448))))
+
+y2021$population = as.integer(y2021$population)
+
+
+
+```
+
+
+```{r}
+# 2020
+
+y2020 =  w %>% filter(year == "2020")
+
+y2020  = y2020  %>% mutate( population = ifelse(place ==  "Montebello", 1525,
+                                     ifelse(place == "Piacenza", 283433,
+                                          ifelse(place =="Voghera", 39006, 11689))))
+
+y2021$population = as.integer(y2021$population)
+
+```
+
+
+
+```{r}
+# 2019
+
+# piacenza = 
+# montebello = 
+# voghera = 
+# stadella = 
+
+y2019 =  w %>% filter(year == "2019")
+
+y2019  = y2019  %>% mutate( population = ifelse(place ==  "Montebello", 1546,
+                                     ifelse(place == "Piacenza", 286265,
+                                          ifelse(place =="Voghera", 39051, 11669))))
+
+y2019$population = as.integer(y2019$population)
+
+
+
+```
+
+
+
+
+```{r}
+# 2018
+
+# piacenza = 103.904
+# montebello = 1596
+# voghera = 39.051
+# stadella = 11 699
+
+y2018 =  w %>% filter(year == "2018")
+
+y2018  = y2018  %>% mutate( population = ifelse(place ==  "Montebello", 1596,
+                                     ifelse(place == "Piacenza", 103904,
+                                          ifelse(place =="Voghera", 39051, 11669))))
+
+y2018$population = as.integer(y2018$population)
+
+
+```
+
+
+```{r}
+population_profit <- do.call("rbind", list(y2018,y2019,y2020,y2021,y2022,y2023))
+population_profit$date = as.Date(population_profit$date)
+population_profit$ristorante = as.factor(population_profit$ristorante)
+population_profit$weekday = as.factor(population_profit$weekday)
+population_profit$LOCALITA.x = as.factor(population_profit$LOCALITA.x)
+population_profit$LOCALITA.y = as.factor(population_profit$LOCALITA.y)
+population_profit$FENOMENI = as.factor(population_profit$FENOMENI)
+
+
+population_profit <- population_profit[order(population_profit$date),]
+write.csv(population_profit, file = '~/datasclab/population_profit.csv', sep = ',', row.names=FALSE, col.names=TRUE)
+
+population_profit
+
+```
+
+####################### population-covid
+
+
+```{r}
+covid <- read.csv("~/datasclab/covid.csv")
+
+c = covid  %>%
+  dplyr::mutate(year = lubridate::year(covid$date), 
+                month = lubridate::month(covid$date), 
+                day = lubridate::day(covid$date))
+head(c)
+
+
+```
+
+
+
+
+
+```{r}
+c = c %>% mutate( place = ifelse(ristorante == "R000", "Montebello",
+                                     ifelse(ristorante == "R001", "Piacenza",
+                                            ifelse(ristorante == "R002", "Piacenza",
+                                                   ifelse(ristorante == "R003", "Piacenza", 
+                                                          ifelse(ristorante == "R004","Stradella","Voghera"))))))
+ c$place = as.factor(c$place)
+head(c) 
+```
+
+
+
+
+
+```{r}
+# 2021
+
+cy2021 =  c %>% filter(year == "2021")
+
+cy2021  = cy2021  %>% mutate( population = ifelse(place ==  "Montebello", 1512,
+                                     ifelse(place == "Piacenza", 283742,
+                                          ifelse(place =="Voghera", 38435, 11448))))
+
+cy2021$population = as.integer(cy2021$population)
+
+cy2021
+
+```
+
+
+```{r}
+# 2020
+
+cy2020 =  c %>% filter(year == "2020")
+
+cy2020  = cy2020  %>% mutate( population = ifelse(place ==  "Montebello", 1525,
+                                     ifelse(place == "Piacenza", 283433,
+                                          ifelse(place =="Voghera", 39006, 11689))))
+
+cy2021$population = as.integer(cy2021$population)
+
+```
+
+
+```{r}
+population_covid <- do.call("rbind", list(cy2020,cy2021))
+population_covid$date = as.Date(population_covid$date)
+population_covid$ristorante = as.factor(population_covid$ristorante)
+population_covid$weekday = as.factor(population_covid$weekday)
+population_covid$LOCALITA.x = as.factor(population_covid$LOCALITA.x)
+population_covid$LOCALITA.y = as.factor(population_covid$LOCALITA.y)
+population_covid$FENOMENI = as.factor(population_covid$FENOMENI)
+population_covid$sigla_provincia = as.factor(population_covid$sigla_provincia)
+
+population_covid <- population_covid[order(population_covid$date),]
+#write.csv(population_covid , file = '~/datasclab/population_covid.csv', sep = ',', row.names=FALSE, col.names=TRUE)
+
+
+
+population_covid
+
+```
+
+
+
+####################### profit-month
+
+
+```{r}
+population_profit <- read.csv("~/datasclab/population_profit.csv")
+head(population_profit)
+ o =population_profit %>% select(date,ristorante,lordototale,year,month)
+o$date = as.Date(o$date)
+o$ristorante = as.factor(o$ristorante)
+o$year = as.factor(o$year)
+o$month =as.factor( o$month)
+head(o)
+
+```
+
+
+```{r}
+#2018
+
+o8 = o %>% filter(year == 2018)
+i8 = aggregate(lordototale~ristorante+month,o8,FUN=sum)
+i8 = i8 %>% mutate(year=2018)
+
+#2019
+
+o9 = o %>% filter(year == 2019)
+i9 = aggregate(lordototale~ristorante+month,o9,FUN=sum)
+i9 = i9 %>% mutate(year=2019)
+
+
+#2020
+
+o0 = o %>% filter(year == 2020)
+i0 = aggregate(lordototale~ristorante+month,o0,FUN=sum)
+i0 = i0 %>% mutate(year=2020)
+
+
+#2021
+
+o1 = o %>% filter(year == 2021)
+i1 = aggregate(lordototale~ristorante+month,o1,FUN=sum)
+i1 = i1 %>% mutate(year=2021)
+
+#2022
+
+o2 = o %>% filter(year == 2022)
+i2 = aggregate(lordototale~ristorante+month,o2,FUN=sum)
+i2 = i2 %>% mutate(year=2022)
+
+
+#2023
+
+o3 = o %>% filter(year == 2023)
+i3 = aggregate(lordototale~ristorante+month,o3,FUN=sum)
+i3 = i3 %>% mutate(year=2023)
+i3
+
+month_profit <- do.call("rbind", list(i8,i9,i0,i1,i2,i3))
+#month_profit$year = as.factor(month_profit$year)
+
+library(tidyr)
+library(lubridate)
+month_profit = month_profit%>% mutate('date' = make_date(year = year, month = month))
+m =  month_profit[order(month_profit$date),]
+m
+
+#write.csv(month_profit , file = '~/datasclab/month_profit.csv', sep = ',', row.names=FALSE, col.names=TRUE)
+
+```
+
+
+############################ covid_profit
+
+```{r}
+p <- read.csv("~/datasclab/population_covid.csv")
+p$date = as.Date(p$date)
+p$ristorante = as.factor(p$ristorante)
+p$LOCALITA.x = as.factor(p$LOCALITA.x)
+p$year = as.factor(p$year)
+p$month = as.factor(p$month)
+p$place = as.factor(p$place)
+
+
+p = p %>% select(date,ristorante,lordototale,LOCALITA.x,totale_casi,year,month,place,population)
+head(p)
+
+```
+
+
+```{r}
+
+#2020
+
+p0 = p %>% filter(year == 2020)
+p0 = aggregate(totale_casi~ristorante+month,p0,FUN=sum)
+p0 = p0 %>% mutate(year=2020)
+p0
+
+#2021
+
+p1 = p %>% filter(year == 2021)
+p1 = aggregate(totale_casi~ristorante+month,p1,FUN=sum)
+p1 = p1 %>% mutate(year=2021)
+
+covid_profit <- do.call("rbind", list(p0,p1))
+#covid_profit
+
+covid_profit = covid_profit%>% mutate('date' = make_date(year = year, month = month))
+c =  covid_profit[order(covid_profit$date),]
+c
+
+c =  c %>% select(date,ristorante,totale_casi)
+
+```
+
+
+
+######################## join covid with profit for full date(full dati)
+
+```{r}
+
+dff <- m %>% full_join(c)
+dff
+
+```
+
+
+```{r}
+#Replace NA avalues with 0
+my <- replace(dff,is.na(dff),0)
+my
+
+ my = my %>% mutate( place = ifelse(ristorante == "R000", "Montebello",
+                                     ifelse(ristorante == "R001", "Piacenza",
+                                            ifelse(ristorante == "R002", "Piacenza",
+                                                   ifelse(ristorante == "R003", "Piacenza", 
+                                                          ifelse(ristorante == "R004","Stradella","Voghera"))))))
+
+my= my %>% mutate( LOCALITA = ifelse(ristorante == "R000", "Pavia",
+                                     ifelse(ristorante == "R001", "Piacenza",
+                                            ifelse(ristorante == "R002", "Piacenza",
+                                                   ifelse(ristorante == "R003", "Piacenza", 
+                                                          ifelse(ristorante == "R004","Pavia","Pavia"))))))
+
+#write.csv(my , file = '~/datasclab/full_date.csv', sep = ',', row.names=FALSE, col.names=TRUE)
+
+my1 = my
+```
+
+## population
+
+```{r}
+# 2023
+
+y2023 =  my1 %>% filter(year == "2023")
+
+y2023  = y2023  %>% mutate( population = ifelse(place ==  "Montebello", 1440,
+                                     ifelse(place == "Piacenza", 283650,
+                                          ifelse(place =="Voghera", 38637, 11425))))
+
+y2023$population = as.integer(y2023$population)
+
+```
+
+
+
+```{r}
+# 2022
+
+y2022 =  my1 %>% filter(year == "2022")
+
+y2022  = y2022  %>% mutate( population = ifelse(place ==  "Montebello", 1467,
+                                     ifelse(place == "Piacenza", 283435,
+                                          ifelse(place =="Voghera", 38316, 11406))))
+
+y2022$population = as.integer(y2022$population)
+
+head(y2022)
+```
+
+
+```{r}
+# 2021
+
+y2021 =  my1 %>% filter(year == "2021")
+
+y2021  = y2021  %>% mutate( population = ifelse(place ==  "Montebello", 1512,
+                                     ifelse(place == "Piacenza", 283742,
+                                          ifelse(place =="Voghera", 38435, 11448))))
+
+y2021$population = as.integer(y2021$population)
+
+
+
+```
+
+
+```{r}
+# 2020
+
+y2020 =  my1 %>% filter(year == "2020")
+
+y2020  = y2020  %>% mutate( population = ifelse(place ==  "Montebello", 1525,
+                                     ifelse(place == "Piacenza", 283433,
+                                          ifelse(place =="Voghera", 39006, 11689))))
+
+y2021$population = as.integer(y2021$population)
+
+```
+
+
+
+```{r}
+# 2019
+
+# piacenza = 
+# montebello = 
+# voghera = 
+# stadella = 
+
+y2019 =  my %>% filter(year == "2019")
+
+y2019  = y2019  %>% mutate( population = ifelse(place ==  "Montebello", 1546,
+                                     ifelse(place == "Piacenza", 286265,
+                                          ifelse(place =="Voghera", 39051, 11669))))
+
+y2019$population = as.integer(y2019$population)
+
+
+
+```
+
+
+
+
+```{r}
+# 2018
+
+# piacenza = 103.904
+# montebello = 1596
+# voghera = 39.051
+# stadella = 11 699
+
+y2018 =  my1 %>% filter(year == "2018")
+
+y2018  = y2018  %>% mutate( population = ifelse(place ==  "Montebello", 1596,
+                                     ifelse(place == "Piacenza", 103904,
+                                          ifelse(place =="Voghera", 39051, 11669))))
+
+y2018$population = as.integer(y2018$population)
+y2018
+
+```
+
+
+```{r}
+t <- do.call("rbind", list(y2018,y2019,y2020,y2021,y2022,y2023))
+t = t %>% rename(pop_per_year = "population")
+t
+
+#write.csv(t, file = '~/datasclab/full_dati.csv', sep = ',', row.names=FALSE, col.names=TRUE)
+```
+
+############################ full_weather_covid
+
+```{r}
+population_covid <- read.csv("~/datasclab/population_covid.csv")
+population_profit <- read.csv("~/datasclab/population_profit.csv")
+
+df1 <- population_profit %>% full_join(population_covid)
+df1 = df1 %>% select(-sigla_provincia)
+
+df1 <- replace(df1,is.na(df1),0)
+#View(df1)
+
+d2 <- slice(df1, 1:(n() - 132))     # Apply slice & n functions(9942-9810)
+#View(d2)
+
+write.csv(d2, file = '~/datasclab/full_weather_covid.csv', sep = ',', row.names=FALSE, col.names=TRUE)
+```
+
