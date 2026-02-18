@@ -1,3 +1,7 @@
+# Restaurant Earnings Forecasting: A Multi-Modal Data Science Approach
+## Data Science Lab | Data  Science Master;s Degree | Developed in R & Python
+This project focuses on forecasting the daily gross earnings ("lordo totale") of a restaurant group over a five-year period (September 2018 – May 2023). By integrating external environmental and social factors, we developed a high-precision predictive model using the Prophet forecasting framework.
+
 ## Project Overview
 The primary goal was to analyze historical revenue data from six restaurants (R000–R005) and build a model capable of predicting future earnings while accounting for the significant structural shifts caused by the global pandemic.
 
